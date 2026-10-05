@@ -3,6 +3,7 @@ import { EH_ZIP, extrairBUs, processarBU } from '../lib/offline.js'
 import { novoTotal, somarBU } from '../lib/totalizar.js'
 import Conferencia, { fmt } from './Conferencia.jsx'
 import BoletimImpresso from './BoletimImpresso.jsx'
+import FotoBoletim from './FotoBoletim.jsx'
 import { qrParaDigitado } from '../lib/qrbu.js'
 
 const ROTULO = {
@@ -22,6 +23,7 @@ export default function ValidarOffline({ candidatos }) {
   const [arrastando, setArrastando] = useState(false)
   const [preenchido, setPreenchido] = useState({ key: 0, valores: undefined })
   const [avisoQR, setAvisoQR] = useState(null)
+  const [foto, setFoto] = useState(null)
 
   async function carregar(fileList) {
     const files = [...fileList]
@@ -81,21 +83,28 @@ export default function ValidarOffline({ candidatos }) {
     .filter((u) => !soProblemas || (u.status !== 'ok' && u.status !== 'duplicado'))
   const detalhe = selecionada != null ? lista[selecionada] : null
 
-  // QR Code lido: procura o BU da mesma seção entre os arquivos carregados
-  function usarQR(qr) {
-    const s = qr.secao
-    const i = lista.findIndex(
-      (u) => u.pres && u.status !== 'duplicado' && u.info.secao?.municipio === s.municipio &&
-        u.info.secao?.zona === s.zona && u.info.secao?.secao === s.secao,
-    )
+  // QR Code ou OCR: procura o BU da mesma seção entre os arquivos carregados
+  function localizar(secao, valores, origem) {
+    const codigos = secao.alternativas?.length ? secao.alternativas : [secao.municipio]
+    let i = -1
+    for (const mun of codigos) {
+      i = lista.findIndex(
+        (u) => u.pres && u.status !== 'duplicado' && u.info.secao?.municipio === mun &&
+          u.info.secao?.zona === secao.zona && u.info.secao?.secao === secao.secao,
+      )
+      if (i >= 0) break
+    }
     setSelecionada(i >= 0 ? i : null)
     setAvisoQR(
       i >= 0 || !lista.length
         ? null
-        : `O BU da seção ${s.secao} (zona ${s.zona}, município ${s.municipio}) não está entre os arquivos carregados. Conferindo só as somas do QR Code.`,
+        : `O BU da seção ${secao.secao ?? '?'} (zona ${secao.zona ?? '?'}, município ${secao.municipio ?? '?'}) não está entre os arquivos carregados. Conferindo só as somas ${origem}.`,
     )
-    setPreenchido((p) => ({ key: p.key + 1, valores: qrParaDigitado(qr) }))
+    setPreenchido((p) => ({ key: p.key + 1, valores }))
   }
+
+  const usarQR = (qr) => localizar(qr.secao, qrParaDigitado(qr), 'do QR Code')
+  const usarOCR = (r) => localizar(r.secao, r.valores, 'lidas da foto')
 
   return (
     <section>
@@ -206,15 +215,21 @@ export default function ValidarOffline({ candidatos }) {
             : 'Clique num boletim da lista, ou leia o QR Code do boletim impresso para localizar a seção. Sem arquivo carregado, o QR Code sozinho ainda tem as somas conferidas.'}
         </p>
         <BoletimImpresso bu={detalhe?.info ?? null} onQR={usarQR} />
+        <FotoBoletim candidatos={candidatos} onFoto={setFoto} onLeitura={usarOCR} />
         {avisoQR && <div className="alerta">{avisoQR}</div>}
-        <Conferencia
-          key={`${selecionada}-${preenchido.key}`}
-          inicial={preenchido.valores}
-          pres={detalhe?.pres ?? null}
-          candidatos={candidatos}
-          fonte="Arquivo"
-          passo={1}
-        />
+        <div className={foto ? 'lado-a-lado' : ''}>
+          <div>
+            <Conferencia
+              key={`${selecionada}-${preenchido.key}`}
+              inicial={preenchido.valores}
+              pres={detalhe?.pres ?? null}
+              candidatos={candidatos}
+              fonte="Arquivo"
+              passo={1}
+            />
+          </div>
+          {foto && <a href={foto} target="_blank" rel="noreferrer"><img className="foto-bu" src={foto} alt="Foto do boletim" /></a>}
+        </div>
       </div>
     </section>
   )

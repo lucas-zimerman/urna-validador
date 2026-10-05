@@ -22,6 +22,19 @@ impresso no boletim e o site confere se é o mesmo gravado no BU. Se o QR e o BU
 estiverem disponíveis, também confere se a seção, a urna e o código de carga são
 os mesmos nos dois.
 
+Para fotos de boletim sem QR Code legível (comum em redes sociais):
+
+- **Busca rápida pelos números:** digite o código do município (5 dígitos, como
+  impresso no boletim), a zona e a seção. A UF é descoberta sozinha. Os seletores
+  também mostram o código junto do nome (`01066 — PORTO WALTER`).
+- **Foto do boletim:** a foto fica ao lado da tabela para conferir enquanto digita.
+  O botão **Ler texto da foto (OCR)** usa o tesseract.js para tentar identificar
+  a seção e pré-preencher os votos para Presidente. É uma leitura de melhor
+  esforço: dígitos podem sair errados ou em branco, então confira com a foto.
+  Se o código do município lido não existir, o site tenta variações próximas
+  (o OCR costuma trocar 0 por 6) e avisa qual município usou. O modelo de
+  português do OCR é baixado da internet na primeira leitura.
+
 **2. Totalizar por seção**
 Baixa o BU de cada seção de um município, de uma UF ou do Brasil inteiro, pega
 só o cargo de Presidente, soma tudo e compara com o total oficial divulgado pelo
@@ -73,6 +86,7 @@ npm run totalizar -- --uf br        # Brasil inteiro: centenas de milhares de se
 - `src/lib/totalizar.js` — download em paralelo e soma por seção
 - `src/lib/offline.js` — leitura de BUs locais e de arquivos `.zip`
 - `src/lib/qrbu.js` — leitura do texto do QR Code do boletim impresso (BU digital)
+- `src/lib/ocrbu.js` — extração de seção e votos do texto lido por OCR de uma foto do boletim
 - `src/components/` — telas de validação e de totalização
 - `scripts/totalizar.mjs` — versão CLI da totalização
 

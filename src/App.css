@@ -71,3 +71,9 @@ label.check { flex-direction: row; align-items: center; gap: 6px; }
 .impresso .checagens { margin: 12px 0 0; }
 textarea { font: 0.85rem ui-monospace, monospace; color: var(--fg); background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 8px; width: 100%; resize: vertical; }
 label.botao.desabilitado { opacity: 0.5; pointer-events: none; }
+
+.filtros input.curto { width: 80px; }
+.lado-a-lado { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 340px); gap: 16px; align-items: start; }
+.foto-bu { width: 100%; position: sticky; top: 12px; border: 1px solid var(--border); border-radius: 8px; margin-top: 56px; }
+pre.ocr { white-space: pre-wrap; font-size: 0.8rem; background: var(--bg); padding: 8px; border-radius: 6px; max-height: 300px; overflow: auto; }
+@media (max-width: 760px) { .lado-a-lado { grid-template-columns: 1fr; } .foto-bu { position: static; margin-top: 8px; } }

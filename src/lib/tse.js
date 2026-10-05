@@ -154,3 +154,23 @@ export async function resultadoOficial(el, uf, mun, opts) {
     candidatos,
   }
 }
+
+// Todos os municípios do Brasil (código TSE → UF e nome), num único arquivo.
+// Permite achar a UF a partir do código impresso no boletim.
+const cacheMunicipios = new Map()
+export function carregarMunicipiosBR(el, opts) {
+  const chave = `${el.ciclo}/${el.eleicao}`
+  if (!cacheMunicipios.has(chave)) {
+    const url = `${TSE_BASE}/${el.ciclo}/${el.eleicao}/config/mun-e${pad(el.eleicao, 6)}-cm.json`
+    const p = fetchRetry(url, opts).then((cfg) => {
+      const mapa = new Map()
+      for (const abr of cfg.abr ?? []) {
+        for (const m of abr.mu ?? []) mapa.set(Number(m.cd), { uf: abr.cd, cd: m.cd, nome: m.nm })
+      }
+      return mapa
+    })
+    p.catch(() => cacheMunicipios.delete(chave))
+    cacheMunicipios.set(chave, p)
+  }
+  return cacheMunicipios.get(chave)
+}

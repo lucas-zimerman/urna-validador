@@ -109,7 +109,7 @@ export default function Totalizacao({ eleicao, candidatos }) {
           <select value={mun} onChange={(e) => setMun(e.target.value)} disabled={rodando || uf === 'br'}>
             <option value="">Todos</option>
             {municipios.map((m) => (
-              <option key={m.cd} value={m.cd}>{m.nome}</option>
+              <option key={m.cd} value={m.cd}>{m.cd} — {m.nome}</option>
             ))}
           </select>
         </label>
