@@ -11,8 +11,24 @@ import { CARGO_PRESIDENTE } from './bu.js'
 
 const num = (v) => (v == null || v === '' ? null : Number(v))
 
+// Alguns apps leitores de QR devolvem o texto codificado como URL
+// ("QRBU:1:1%20VRQR:...") ou com algo antes do conteúdo (um link, por exemplo).
+export function normalizarTextoQR(texto) {
+  let t = String(texto).trim()
+  if (/%[0-9A-Fa-f]{2}/.test(t)) {
+    try {
+      t = decodeURIComponent(t)
+    } catch {
+      t = t.replace(/%20/gi, ' ')
+    }
+  }
+  if (!/\s/.test(t) && t.includes('+')) t = t.replace(/\+/g, ' ')
+  const i = t.indexOf('QRBU:')
+  return i > 0 ? t.slice(i) : t
+}
+
 export function parseQRBU(texto) {
-  const tokens = String(texto)
+  const tokens = normalizarTextoQR(texto)
     .split(/\s+/)
     .map((t) => t.trim())
     .filter(Boolean)
@@ -75,6 +91,8 @@ export function parseQRBU(texto) {
     },
     pleito: cab.PLEI ?? cab.PROC ?? null,
     turno: cab.TURN ?? null,
+    // AGRE: seções agregadas a esta urna (os votos delas estão neste boletim)
+    agregadas: cab.AGRE ? cab.AGRE.split(/[,;]/).map(Number).filter(Boolean) : [],
     urna: { idue: cab.IDUE ?? null, codigoCarga: cab.IDCA ?? null },
     aptos: num(cab.APTO),
     comparecimento: num(cab.COMP),
@@ -88,6 +106,8 @@ export function parseQRBU(texto) {
 export function qrParaDigitado(qr) {
   const d = {}
   const p = qr.presidente
+  // O QR só lista candidatos com votos: os ausentes valem 0
+  if (p) d.ausentesZero = true
   if (p) {
     for (const [n, v] of Object.entries(p.candidatos)) d[`c${n}`] = String(v)
     d.brancos = String(p.brancos ?? 0)

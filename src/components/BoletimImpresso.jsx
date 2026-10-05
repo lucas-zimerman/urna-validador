@@ -127,6 +127,7 @@ export default function BoletimImpresso({ bu, onQR }) {
           QR lido: {qr.secao.uf?.toUpperCase()} · município {qr.secao.municipio} · zona {qr.secao.zona} ·
           seção {qr.secao.secao}
           {qr.partes.total ? ` · partes ${qr.partes.lidas.join(', ')} de ${qr.partes.total}` : ''}
+          {qr.agregadas.length ? ` · seção(ões) agregada(s): ${qr.agregadas.join(', ')}` : ''}
           {qr.urna.idue ? ` · urna ${qr.urna.idue}` : ''}
         </p>
       )}

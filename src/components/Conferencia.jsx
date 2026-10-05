@@ -8,7 +8,13 @@ const lerNumero = (s) => (s === '' || s == null ? null : Number(String(s).replac
 // `inicial` pré-preenche os campos (ex.: valores lidos do QR Code); para
 // aplicar um novo `inicial`, troque a `key` do componente.
 export default function Conferencia({ pres, candidatos, fonte = 'TSE', passo = 2, inicial }) {
-  const [digitado, setDigitado] = useState(inicial ?? {})
+  const [digitado, setDigitado] = useState(() => {
+    if (!inicial?.ausentesZero) return inicial ?? {}
+    const { ausentesZero: _, ...valores } = inicial
+    const numeros = [...candidatos.map((c) => c.numero), ...Object.keys(pres?.candidatos ?? {})]
+    for (const n of numeros) valores[`c${n}`] ??= '0'
+    return valores
+  })
 
   // Linhas: todos os candidatos conhecidos + qualquer número que apareça no BU
   const linhas = useMemo(() => {
