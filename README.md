@@ -1,105 +1,77 @@
 # Validador de Urnas — Presidente
 
-Site em React que confere os resultados de **Presidente** usando apenas os
-arquivos públicos do TSE (`resultados.tse.jus.br`).
+Site para conferir os resultados de **Presidente** usando os dados públicos do TSE.
+Você compara o boletim de urna impresso (o papel afixado na seção) com o arquivo
+que o TSE publicou, e pode refazer a soma de todas as seções.
 
-## O que faz
+## Como rodar
 
-**1. Validar boletim de urna**
-Você escolhe UF → município → zona → seção e digita os números do boletim
-impresso (votos por candidato, brancos, nulos, comparecimento, aptos). O site
-baixa o BU (`*-bu.dat`) daquela seção no TSE, decodifica e mostra:
-
-- se cada valor digitado bate com o BU publicado pelo TSE;
-- se a soma do boletim digitado (candidatos + brancos + nulos) bate com o comparecimento;
-- se a soma do próprio BU do TSE bate com o comparecimento, e se o comparecimento não excede os aptos.
-
-Em vez de escolher a seção e digitar os números, dá para usar o **BU digital**:
-cole o texto do QR Code do boletim impresso (ou carregue uma foto do QR). O site
-localiza a seção, busca o BU e preenche a tabela sozinho. Também há um campo de
-**código verificador**: digite a identificação da urna ou o código de carga
-impresso no boletim e o site confere se é o mesmo gravado no BU. Se o QR e o BU
-estiverem disponíveis, também confere se a seção, a urna e o código de carga são
-os mesmos nos dois.
-
-Para fotos de boletim sem QR Code legível (comum em redes sociais):
-
-- **Busca rápida pelos números:** digite o código do município (5 dígitos, como
-  impresso no boletim), a zona e a seção. A UF é descoberta sozinha. Os seletores
-  também mostram o código junto do nome (`01066 — PORTO WALTER`).
-- **Foto do boletim:** a foto fica ao lado da tabela para conferir enquanto digita.
-  O botão **Ler texto da foto (OCR)** usa o tesseract.js para tentar identificar
-  a seção e pré-preencher os votos para Presidente. É uma leitura de melhor
-  esforço: dígitos podem sair errados ou em branco, então confira com a foto.
-  Se o código do município lido não existir, o site tenta variações próximas
-  (o OCR costuma trocar 0 por 6) e avisa qual município usou. O modelo de
-  português do OCR é baixado da internet na primeira leitura.
-
-**2. Totalizar por seção**
-Baixa o BU de cada seção de um município, de uma UF ou do Brasil inteiro, pega
-só o cargo de Presidente, soma tudo e compara com o total oficial divulgado pelo
-TSE para a mesma abrangência. Seções agregadas (que compartilham o BU da seção
-principal) são contadas uma vez só. Também aponta BUs cuja soma não bate com o
-comparecimento e seções sem BU.
-
-**3. Validador offline**
-Confere arquivos de BU que estão no seu computador, sem acessar a internet:
-arquivos `.bu` / `-bu.dat` (portal do TSE ou pen drive da urna), pastas inteiras
-ou `.zip` com vários boletins (inclusive zips dentro de zips). Para cada boletim,
-mostra se a soma bate com o comparecimento. Também soma todos os boletins
-carregados, contando cada seção uma vez só, e deixa você conferir um boletim
-contra os números do boletim impresso, digitados ou lidos do QR Code. O QR Code
-localiza o boletim da mesma seção entre os arquivos carregados. Sem nenhum
-arquivo, o QR sozinho ainda tem as somas conferidas. Nada é enviado para
-servidor algum.
-
-**Exterior:** brasileiros que votam fora do país aparecem na UF `ZZ — Exterior`,
-com cada cidade como município (ex.: `30805 — WELLINGTON`, Nova Zelândia). Tudo
-acima funciona igual para o exterior, inclusive a busca rápida pelo código.
-
-**Seções agregadas:** quando várias seções votam na mesma urna (comum no
-exterior), só a seção principal tem BU. Validar uma seção agregada busca o BU
-da principal e avisa; na totalização elas são contadas à parte, não como erro.
-
-A eleição é escolhida a partir da configuração do próprio TSE
-(`/oficial/comum/config/ele-c.json`), então o 2º turno aparece sozinho quando for publicado.
-
-## Rodando
-
-Requer Node 22 (`.nvmrc`):
+Precisa do [Node.js](https://nodejs.org) 22 ou mais novo.
 
 ```sh
-nvm use
+git clone https://github.com/lucas-zimerman/urna-validador.git
+cd urna-validador
 npm install
 npm run dev
 ```
 
-O navegador acessa o TSE diretamente (o servidor do TSE libera CORS).
+Abra o endereço que aparecer no terminal (normalmente http://localhost:5173).
 
-### Totalização pela linha de comando
+## Como usar
 
-Mesma lógica do site, útil para abrangências grandes:
+### Validar boletim de urna
 
-```sh
-npm run totalizar -- --uf ac --mun 01066
-npm run totalizar -- --uf sp --concorrencia 8 --json sp.json
-npm run totalizar -- --uf br        # Brasil inteiro: centenas de milhares de seções
-```
+Confere um boletim impresso contra o arquivo do TSE.
 
-## Estrutura
+1. **Encontre a seção.** Digite o código do município, a zona e a seção como estão
+   impressos no boletim (ex.: `01066`, `4`, `77`). Também dá para escolher nas listas.
+2. **Digite os números do boletim:** votos de cada candidato, brancos, nulos,
+   comparecimento e eleitores aptos.
+3. **Veja o resultado.** Cada linha mostra ✔ se bate com o TSE ou ✘ com a diferença,
+   e o site também confere se as somas fecham.
 
-- `src/lib/der.js` — leitor mínimo de ASN.1 DER
-- `src/lib/bu.js` — decodifica o Boletim de Urna e extrai o cargo de Presidente
-- `src/lib/tse.js` — URLs e acesso à API do TSE (com retentativa para HTTP 429/5xx)
-- `src/lib/totalizar.js` — download em paralelo e soma por seção
-- `src/lib/offline.js` — leitura de BUs locais e de arquivos `.zip`
-- `src/lib/qrbu.js` — leitura do texto do QR Code do boletim impresso (BU digital)
-- `src/lib/ocrbu.js` — extração de seção e votos do texto lido por OCR de uma foto do boletim
-- `src/components/` — telas de validação e de totalização
-- `scripts/totalizar.mjs` — versão CLI da totalização
+Atalhos:
 
-## Observações
+- **BU digital (QR Code):** cole o texto do QR Code do boletim (lido com qualquer
+  app de QR, ou com o app *Boletim na Mão* do TSE) ou envie uma foto do QR.
+  O site encontra a seção e preenche tudo sozinho.
+- **Código verificador:** digite a identificação da urna ou o código de carga
+  impresso no boletim para conferir se é a mesma urna do arquivo do TSE.
+- **Foto do boletim:** a foto fica ao lado da tabela para você conferir enquanto
+  digita. O botão **Ler texto da foto (OCR)** tenta preencher os números
+  sozinho — confira sempre com a foto, porque o OCR pode errar dígitos.
 
-- O TSE limita requisições em rajada (HTTP 429). Mantenha a concorrência baixa (8 é o padrão).
-- O hash e a assinatura digital do QR Code (campos `HASH`/`ASSI`) e do BU não são verificados: a conferência é dos números e códigos.
-- Projeto independente, sem vínculo com o TSE.
+### Totalizar por seção
+
+Escolha um município, um estado ou o Brasil inteiro. O site baixa o boletim de
+cada seção, soma os votos para Presidente e compara com o total oficial do TSE.
+
+> O Brasil inteiro tem centenas de milhares de seções e pode levar horas.
+> Comece por um município ou estado.
+
+### Validador offline
+
+Confere arquivos de boletim que estão no seu computador, sem internet:
+arraste arquivos `.bu` / `-bu.dat`, uma pasta ou um `.zip` (por exemplo, os
+pacotes por estado do [Portal de Dados Abertos do TSE](https://dadosabertos.tse.jus.br)).
+O site confere a soma de cada boletim e soma todos eles.
+
+## Dicas
+
+- **Votos no exterior:** escolha a UF `ZZ — Exterior`. Cada cidade é um município
+  (ex.: `30805 — WELLINGTON`, `30341 — PORTO`).
+- **Seção agregada:** às vezes várias seções votam na mesma urna. Se você escolher
+  uma seção agregada, o site mostra o boletim da seção principal, que contém os
+  votos de todas.
+- **Linha de comando:** a totalização também roda no terminal:
+  `npm run totalizar -- --uf ac` (ou `--uf sp --mun 71072`).
+
+## Limitações
+
+- Confere os **números** e os **códigos** da urna. Não verifica as assinaturas
+  digitais do boletim nem do QR Code.
+- O TSE limita o número de requisições; se aparecer "HTTP 429", espere um pouco
+  e tente de novo.
+
+Projeto independente, sem vínculo com o TSE. Os dados vêm da API pública
+[resultados.tse.jus.br](https://resultados.tse.jus.br).
