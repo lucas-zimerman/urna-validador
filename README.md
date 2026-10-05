@@ -14,6 +14,14 @@ baixa o BU (`*-bu.dat`) daquela seção no TSE, decodifica e mostra:
 - se a soma do boletim digitado (candidatos + brancos + nulos) bate com o comparecimento;
 - se a soma do próprio BU do TSE bate com o comparecimento, e se o comparecimento não excede os aptos.
 
+Em vez de escolher a seção e digitar os números, dá para usar o **BU digital**:
+cole o texto do QR Code do boletim impresso (ou carregue uma foto do QR). O site
+localiza a seção, busca o BU e preenche a tabela sozinho. Também há um campo de
+**código verificador**: digite a identificação da urna ou o código de carga
+impresso no boletim e o site confere se é o mesmo gravado no BU. Se o QR e o BU
+estiverem disponíveis, também confere se a seção, a urna e o código de carga são
+os mesmos nos dois.
+
 **2. Totalizar por seção**
 Baixa o BU de cada seção de um município, de uma UF ou do Brasil inteiro, pega
 só o cargo de Presidente, soma tudo e compara com o total oficial divulgado pelo
@@ -27,7 +35,10 @@ arquivos `.bu` / `-bu.dat` (portal do TSE ou pen drive da urna), pastas inteiras
 ou `.zip` com vários boletins (inclusive zips dentro de zips). Para cada boletim,
 mostra se a soma bate com o comparecimento. Também soma todos os boletins
 carregados, contando cada seção uma vez só, e deixa você conferir um boletim
-contra os números do boletim impresso. Nada é enviado para servidor algum.
+contra os números do boletim impresso, digitados ou lidos do QR Code. O QR Code
+localiza o boletim da mesma seção entre os arquivos carregados. Sem nenhum
+arquivo, o QR sozinho ainda tem as somas conferidas. Nada é enviado para
+servidor algum.
 
 A eleição é escolhida a partir da configuração do próprio TSE
 (`/oficial/comum/config/ele-c.json`), então o 2º turno aparece sozinho quando for publicado.
@@ -61,10 +72,12 @@ npm run totalizar -- --uf br        # Brasil inteiro: centenas de milhares de se
 - `src/lib/tse.js` — URLs e acesso à API do TSE (com retentativa para HTTP 429/5xx)
 - `src/lib/totalizar.js` — download em paralelo e soma por seção
 - `src/lib/offline.js` — leitura de BUs locais e de arquivos `.zip`
+- `src/lib/qrbu.js` — leitura do texto do QR Code do boletim impresso (BU digital)
 - `src/components/` — telas de validação e de totalização
 - `scripts/totalizar.mjs` — versão CLI da totalização
 
 ## Observações
 
 - O TSE limita requisições em rajada (HTTP 429). Mantenha a concorrência baixa (8 é o padrão).
+- O hash e a assinatura digital do QR Code (campos `HASH`/`ASSI`) e do BU não são verificados: a conferência é dos números e códigos.
 - Projeto independente, sem vínculo com o TSE.

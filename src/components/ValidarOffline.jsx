@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { EH_ZIP, extrairBUs, processarBU } from '../lib/offline.js'
 import { novoTotal, somarBU } from '../lib/totalizar.js'
 import Conferencia, { fmt } from './Conferencia.jsx'
+import BoletimImpresso from './BoletimImpresso.jsx'
+import { qrParaDigitado } from '../lib/qrbu.js'
 
 const ROTULO = {
   ok: '✔ consistente',
@@ -18,6 +20,8 @@ export default function ValidarOffline({ candidatos }) {
   const [selecionada, setSelecionada] = useState(null)
   const [soProblemas, setSoProblemas] = useState(false)
   const [arrastando, setArrastando] = useState(false)
+  const [preenchido, setPreenchido] = useState({ key: 0, valores: undefined })
+  const [avisoQR, setAvisoQR] = useState(null)
 
   async function carregar(fileList) {
     const files = [...fileList]
@@ -76,6 +80,22 @@ export default function ValidarOffline({ candidatos }) {
     .map((u, i) => ({ ...u, i }))
     .filter((u) => !soProblemas || (u.status !== 'ok' && u.status !== 'duplicado'))
   const detalhe = selecionada != null ? lista[selecionada] : null
+
+  // QR Code lido: procura o BU da mesma seção entre os arquivos carregados
+  function usarQR(qr) {
+    const s = qr.secao
+    const i = lista.findIndex(
+      (u) => u.pres && u.status !== 'duplicado' && u.info.secao?.municipio === s.municipio &&
+        u.info.secao?.zona === s.zona && u.info.secao?.secao === s.secao,
+    )
+    setSelecionada(i >= 0 ? i : null)
+    setAvisoQR(
+      i >= 0 || !lista.length
+        ? null
+        : `O BU da seção ${s.secao} (zona ${s.zona}, município ${s.municipio}) não está entre os arquivos carregados. Conferindo só as somas do QR Code.`,
+    )
+    setPreenchido((p) => ({ key: p.key + 1, valores: qrParaDigitado(qr) }))
+  }
 
   return (
     <section>
@@ -175,18 +195,27 @@ export default function ValidarOffline({ candidatos }) {
           </div>
           {visiveis.length > 1000 && <p className="info">Mostrando os primeiros 1.000 de {fmt(visiveis.length)}.</p>}
 
-          {detalhe?.pres && (
-            <div className="detalhe">
-              <h2>Boletim selecionado</h2>
-              <p className="info">
-                {detalhe.nome} · município {detalhe.info.secao?.municipio} · zona {detalhe.info.secao?.zona} ·
-                seção {detalhe.info.secao?.secao} · emitido em {detalhe.info.emissao}
-              </p>
-              <Conferencia key={selecionada} pres={detalhe.pres} candidatos={candidatos} fonte="Arquivo" passo={1} />
-            </div>
-          )}
         </>
       )}
+
+      <div className="detalhe">
+        <h2>Conferir com o boletim impresso</h2>
+        <p className="info">
+          {detalhe?.pres
+            ? `Boletim selecionado: ${detalhe.nome} · município ${detalhe.info.secao?.municipio} · zona ${detalhe.info.secao?.zona} · seção ${detalhe.info.secao?.secao} · emitido em ${detalhe.info.emissao}`
+            : 'Clique num boletim da lista, ou leia o QR Code do boletim impresso para localizar a seção. Sem arquivo carregado, o QR Code sozinho ainda tem as somas conferidas.'}
+        </p>
+        <BoletimImpresso bu={detalhe?.info ?? null} onQR={usarQR} />
+        {avisoQR && <div className="alerta">{avisoQR}</div>}
+        <Conferencia
+          key={`${selecionada}-${preenchido.key}`}
+          inicial={preenchido.valores}
+          pres={detalhe?.pres ?? null}
+          candidatos={candidatos}
+          fonte="Arquivo"
+          passo={1}
+        />
+      </div>
     </section>
   )
 }

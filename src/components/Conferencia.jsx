@@ -5,8 +5,10 @@ const lerNumero = (s) => (s === '' || s == null ? null : Number(String(s).replac
 
 // Tabela para digitar o boletim impresso e conferir com um BU decodificado
 // (`pres` = resultado de presidenteDoBU, ou null enquanto não houver BU).
-export default function Conferencia({ pres, candidatos, fonte = 'TSE', passo = 2 }) {
-  const [digitado, setDigitado] = useState({})
+// `inicial` pré-preenche os campos (ex.: valores lidos do QR Code); para
+// aplicar um novo `inicial`, troque a `key` do componente.
+export default function Conferencia({ pres, candidatos, fonte = 'TSE', passo = 2, inicial }) {
+  const [digitado, setDigitado] = useState(inicial ?? {})
 
   // Linhas: todos os candidatos conhecidos + qualquer número que apareça no BU
   const linhas = useMemo(() => {

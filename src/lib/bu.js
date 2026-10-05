@@ -120,6 +120,12 @@ export function decodeBU(input) {
   }
 
   const emissao = ch.find((c) => c.tag === UNIVERSAL_GENERALSTRING)
+  const urnaNode = ch.find((c) => {
+    if (c.tag !== UNIVERSAL_SEQUENCE) return false
+    const u = children(b, c)
+    return u[0]?.tag === UNIVERSAL_ENUM && u[1]?.tag === UNIVERSAL_GENERALSTRING
+  })
+  const urna = urnaNode ? decodeUrna(b, urnaNode) : null
   const fase = ch.find((c) => c.tag === UNIVERSAL_ENUM)
 
   // resultadosVotacaoPorEleicao: SEQUENCE OF SEQUENCE { idEleicao INTEGER, aptos INTEGER, ... }
@@ -155,10 +161,55 @@ export function decodeBU(input) {
 
   return {
     secao,
+    urna,
     fase: fase ? int(b, fase) : null,
     emissao: emissao ? formatDataHora(str(b, emissao)) : null,
     eleicoes,
   }
+}
+
+// Urna ::= SEQUENCE { tipoUrna, versaoVotacao, correspondenciaEfetivada SEQUENCE {
+//   identificacao, carga SEQUENCE { numeroInternoUrna, numeroSerieFC, ..., dataHoraCarga, codigoCarga } }, ... }
+// Lido de forma tolerante: guarda todos os códigos encontrados para conferência.
+function decodeUrna(b, node) {
+  const urna = { versao: null, idue: null, codigoCarga: null, dataHoraCarga: null, outrosCodigos: [] }
+  const hex = (n) => [...slice(b, n)].map((x) => x.toString(16).padStart(2, '0')).join('').toUpperCase()
+  const visitar = (n, prof) => {
+    for (const c of children(b, n)) {
+      if (c.tag === UNIVERSAL_GENERALSTRING) {
+        const v = str(b, c)
+        if (prof === 0 && !urna.versao) urna.versao = v
+        else if (/^\d{8}T\d{6}$/.test(v)) urna.dataHoraCarga ??= formatDataHora(v)
+        else if (/^\d{24}$/.test(v)) urna.codigoCarga ??= v
+        else urna.outrosCodigos.push(v)
+      } else if (c.tag === UNIVERSAL_INTEGER && prof === 2 && urna.idue == null) {
+        urna.idue = int(b, c)
+      } else if (c.tag === UNIVERSAL_OCTETS && prof >= 2) {
+        urna.outrosCodigos.push(hex(c))
+      } else if (c.constructed && c.tag !== 0xa0) {
+        visitar(c, prof + 1)
+      }
+    }
+  }
+  visitar(node, 0)
+  return urna
+}
+
+const normalizarCodigo = (s) => String(s).toUpperCase().replace(/[^0-9A-Z]/g, '').replace(/^0+(?=.)/, '')
+
+// Confere um código impresso no boletim contra os códigos da urna gravados no BU.
+// Devolve o nome do campo que bateu, ou null.
+export function conferirCodigo(bu, codigo) {
+  const alvo = normalizarCodigo(codigo)
+  if (!alvo || !bu?.urna) return null
+  const u = bu.urna
+  const campos = [
+    ['Código de identificação da urna', u.idue],
+    ['Código de carga', u.codigoCarga],
+    ...u.outrosCodigos.map((c) => ['Código de verificação da urna', c]),
+  ]
+  const achado = campos.find(([, v]) => v != null && normalizarCodigo(v) === alvo)
+  return achado ? achado[0] : null
 }
 
 function formatDataHora(s) {
