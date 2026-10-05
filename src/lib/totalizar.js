@@ -37,7 +37,7 @@ export function novoTotal() {
   }
 }
 
-function somarBU(total, uf, pres) {
+export function somarBU(total, pres) {
   total.urnasContadas++
   total.aptos += pres.aptos
   total.comparecimento += pres.comparecimento
@@ -85,7 +85,7 @@ export async function totalizar(el, secoes, { concorrencia = 8, signal, onProgre
             total.falhas.push({ ...s, motivo: 'BU sem votação para Presidente' })
           } else if (!vistos.has(chave)) {
             vistos.add(chave)
-            somarBU(total, s.uf, pres)
+            somarBU(total, pres)
             if (pres.soma !== pres.comparecimento) {
               total.inconsistentes.push({ ...s, soma: pres.soma, comparecimento: pres.comparecimento })
             }

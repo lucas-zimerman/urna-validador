@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { listarEleicoesPresidente, resultadoOficial } from './lib/tse.js'
 import ValidarSecao from './components/ValidarSecao.jsx'
 import Totalizacao from './components/Totalizacao.jsx'
+import ValidarOffline from './components/ValidarOffline.jsx'
 import './App.css'
 
 export default function App() {
@@ -58,13 +59,18 @@ export default function App() {
           <button className={aba === 'totalizar' ? 'ativo' : ''} onClick={() => setAba('totalizar')}>
             Totalizar por seção
           </button>
+          <button className={aba === 'offline' ? 'ativo' : ''} onClick={() => setAba('offline')}>
+            Validador offline
+          </button>
         </nav>
       </header>
 
-      {erro && <div className="alerta erro">{erro}</div>}
+      {erro && aba !== 'offline' && <div className="alerta erro">{erro}</div>}
 
       <main>
-        {!eleicao ? (
+        {aba === 'offline' ? (
+          <ValidarOffline candidatos={candidatos} />
+        ) : !eleicao ? (
           !erro && <p>Carregando eleições do TSE…</p>
         ) : aba === 'validar' ? (
           <ValidarSecao eleicao={eleicao} candidatos={candidatos} />

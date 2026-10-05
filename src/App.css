@@ -50,3 +50,17 @@ footer { margin-top: 48px; color: var(--muted); font-size: 0.85rem; }
   .tabela input { width: 80px; }
   .tabela th, .tabela td { padding: 6px; font-size: 0.9rem; }
 }
+
+.soltar { border: 2px dashed var(--border); border-radius: 10px; padding: 20px; margin: 16px 0; text-align: center; background: var(--card); }
+.soltar.ativo { border-color: var(--accent); }
+.soltar p { margin: 0 0 10px; color: var(--muted); }
+.soltar .acoes { justify-content: center; margin: 0; flex-wrap: wrap; }
+label.botao { display: inline-block; cursor: pointer; border-radius: 6px; padding: 8px 14px; border: 1px solid var(--accent); background: var(--accent); color: #fff; font-size: 1rem; }
+label.botao.secundario { background: transparent; color: var(--accent); }
+label.check { flex-direction: row; align-items: center; gap: 6px; }
+.rolagem { max-height: 420px; overflow: auto; }
+.tabela td.arquivo { font-family: ui-monospace, monospace; font-size: 0.8rem; word-break: break-all; }
+.tabela tr.clicavel { cursor: pointer; }
+.tabela tr.clicavel:hover { background: var(--bg); }
+.tabela tr.selecionada td { outline: 2px solid var(--accent); outline-offset: -2px; }
+.detalhe { margin-top: 24px; }

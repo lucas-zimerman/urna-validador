@@ -21,6 +21,14 @@ TSE para a mesma abrangência. Seções agregadas (que compartilham o BU da seç
 principal) são contadas uma vez só. Também aponta BUs cuja soma não bate com o
 comparecimento e seções sem BU.
 
+**3. Validador offline**
+Confere arquivos de BU que estão no seu computador, sem acessar a internet:
+arquivos `.bu` / `-bu.dat` (portal do TSE ou pen drive da urna), pastas inteiras
+ou `.zip` com vários boletins (inclusive zips dentro de zips). Para cada boletim,
+mostra se a soma bate com o comparecimento. Também soma todos os boletins
+carregados, contando cada seção uma vez só, e deixa você conferir um boletim
+contra os números do boletim impresso. Nada é enviado para servidor algum.
+
 A eleição é escolhida a partir da configuração do próprio TSE
 (`/oficial/comum/config/ele-c.json`), então o 2º turno aparece sozinho quando for publicado.
 
@@ -52,6 +60,7 @@ npm run totalizar -- --uf br        # Brasil inteiro: centenas de milhares de se
 - `src/lib/bu.js` — decodifica o Boletim de Urna e extrai o cargo de Presidente
 - `src/lib/tse.js` — URLs e acesso à API do TSE (com retentativa para HTTP 429/5xx)
 - `src/lib/totalizar.js` — download em paralelo e soma por seção
+- `src/lib/offline.js` — leitura de BUs locais e de arquivos `.zip`
 - `src/components/` — telas de validação e de totalização
 - `scripts/totalizar.mjs` — versão CLI da totalização
 
