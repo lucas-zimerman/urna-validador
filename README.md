@@ -53,6 +53,14 @@ localiza o boletim da mesma seção entre os arquivos carregados. Sem nenhum
 arquivo, o QR sozinho ainda tem as somas conferidas. Nada é enviado para
 servidor algum.
 
+**Exterior:** brasileiros que votam fora do país aparecem na UF `ZZ — Exterior`,
+com cada cidade como município (ex.: `30805 — WELLINGTON`, Nova Zelândia). Tudo
+acima funciona igual para o exterior, inclusive a busca rápida pelo código.
+
+**Seções agregadas:** quando várias seções votam na mesma urna (comum no
+exterior), só a seção principal tem BU. Validar uma seção agregada busca o BU
+da principal e avisa; na totalização elas são contadas à parte, não como erro.
+
 A eleição é escolhida a partir da configuração do próprio TSE
 (`/oficial/comum/config/ele-c.json`), então o 2º turno aparece sozinho quando for publicado.
 

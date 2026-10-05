@@ -59,6 +59,7 @@ linha('Nulos', total.nulos, oficial.nulos)
 linha('Comparecimento', total.comparecimento, oficial.comparecimento)
 linha('Eleitores aptos', total.aptos, oficial.aptos)
 
+if (total.agregadas) console.log(`\nSeções agregadas (votos contados no BU da seção principal): ${total.agregadas}`)
 if (total.inconsistentes.length) console.log(`\nBUs com soma != comparecimento: ${total.inconsistentes.length}`)
 if (total.falhas.length) {
   console.log(`\nSeções sem BU/erro: ${total.falhas.length}`)

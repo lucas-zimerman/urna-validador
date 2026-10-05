@@ -89,15 +89,36 @@ export async function listarEleicoesPresidente(opts) {
 }
 
 // Municípios → zonas → seções de uma UF para o pleito.
-export async function carregarSecoes(el, uf, opts) {
+// Seções agregadas (várias seções votando na mesma urna, comum no exterior)
+// não têm BU próprio: `principal[secao]` aponta a seção cujo BU as contém.
+// A configuração é cacheada (sem o signal, para não cachear um abort).
+const cacheSecoes = new Map()
+export function carregarSecoes(el, uf) {
   const url = `${TSE_BASE}/${el.ciclo}/arquivo-urna/${el.pleito}/config/${uf}/${uf}-p${pad(el.pleito, 6)}-cs.json`
-  const cfg = await fetchRetry(url, opts)
-  const abr = cfg.abr?.find((a) => a.cd === uf) ?? cfg.abr?.[0]
-  return (abr?.mu ?? []).map((m) => ({
-    cd: m.cd,
-    nome: m.nm,
-    zonas: (m.zon ?? []).map((z) => ({ cd: z.cd, secoes: (z.sec ?? []).map((s) => s.ns) })),
-  }))
+  if (!cacheSecoes.has(url)) {
+    const p = fetchRetry(url).then((cfg) => {
+      const abr = cfg.abr?.find((a) => a.cd === uf) ?? cfg.abr?.[0]
+      return (abr?.mu ?? []).map((m) => ({
+        cd: m.cd,
+        nome: m.nm,
+        zonas: (m.zon ?? []).map((z) => ({
+          cd: z.cd,
+          secoes: (z.sec ?? []).map((sec) => sec.ns),
+          principal: Object.fromEntries((z.sec ?? []).filter((sec) => sec.nsp).map((sec) => [sec.ns, sec.nsp])),
+        })),
+      }))
+    })
+    p.catch(() => cacheSecoes.delete(url))
+    cacheSecoes.set(url, p)
+  }
+  return cacheSecoes.get(url)
+}
+
+// Se a seção é agregada, devolve a seção principal (dona do BU); senão, ela mesma.
+export async function secaoPrincipal(el, uf, mun, zona, secao) {
+  const muns = await carregarSecoes(el, uf)
+  const z = muns.find((m) => Number(m.cd) === Number(mun))?.zonas.find((x) => Number(x.cd) === Number(zona))
+  return z?.principal[pad(secao, 4)] ?? pad(secao, 4)
 }
 
 function dirSecao(el, uf, mun, zona, secao) {

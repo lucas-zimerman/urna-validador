@@ -10,17 +10,19 @@ export function useMunicipios(eleicao, uf) {
       setEstado({ municipios: [], carregando: false, erro: null })
       return
     }
-    const ctrl = new AbortController()
+    let vivo = true // ignora respostas de uma UF que já foi trocada
     setEstado({ municipios: [], carregando: true, erro: null })
-    carregarSecoes(eleicao, uf, { signal: ctrl.signal })
+    carregarSecoes(eleicao, uf)
       .then((m) => {
-        m.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
-        setEstado({ municipios: m, carregando: false, erro: null })
+        const ordenados = [...m].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
+        if (vivo) setEstado({ municipios: ordenados, carregando: false, erro: null })
       })
       .catch((e) => {
-        if (e.name !== 'AbortError') setEstado({ municipios: [], carregando: false, erro: e.message })
+        if (vivo) setEstado({ municipios: [], carregando: false, erro: e.message })
       })
-    return () => ctrl.abort()
+    return () => {
+      vivo = false
+    }
   }, [eleicao, uf])
 
   return estado

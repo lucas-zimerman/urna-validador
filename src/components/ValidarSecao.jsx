@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { UFS, baixarBU, carregarMunicipiosBR } from '../lib/tse.js'
+import { UFS, baixarBU, carregarMunicipiosBR, secaoPrincipal } from '../lib/tse.js'
 import { decodeBU, presidenteDoBU } from '../lib/bu.js'
 import { useMunicipios } from './useMunicipios.js'
 import Conferencia from './Conferencia.jsx'
@@ -43,7 +43,9 @@ export default function ValidarSecao({ eleicao, candidatos }) {
     setErro(null)
     setBu(null)
     try {
-      const r = await baixarBU(eleicao, alvo.uf, alvo.mun, alvo.zona, alvo.secao)
+      // Seção agregada não tem BU próprio: busca o da seção principal
+      const principal = await secaoPrincipal(eleicao, alvo.uf, alvo.mun, alvo.zona, alvo.secao).catch(() => alvo.secao)
+      const r = await baixarBU(eleicao, alvo.uf, alvo.mun, alvo.zona, principal)
       if (!r.bytes) throw new Error(`Seção sem boletim publicado (situação: ${r.situacao})`)
       const dec = decodeBU(r.bytes)
       const pres = presidenteDoBU(dec)
@@ -191,7 +193,8 @@ export default function ValidarSecao({ eleicao, candidatos }) {
       {bu && (
         <p className="info">
           BU da seção {bu.info.secao?.secao} · zona {bu.info.secao?.zona} · município {bu.info.secao?.municipio}
-          {bu.info.secao && Number(secao) !== bu.info.secao.secao && ' (seção agregada à principal)'}
+          {bu.info.secao && Number(secao) !== bu.info.secao.secao &&
+            ` — a seção ${Number(secao)} é agregada à ${bu.info.secao.secao}: os votos dela estão neste BU`}
           {' · '}emitido em {bu.info.emissao} · situação: {bu.situacao} ·{' '}
           <a href={bu.url}>baixar arquivo .dat</a>
         </p>

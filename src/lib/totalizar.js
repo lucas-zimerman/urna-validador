@@ -7,12 +7,15 @@ import { decodeBU, presidenteDoBU } from './bu.js'
 export async function listarSecoes(el, ufs, { municipio, zona, signal } = {}) {
   const lista = []
   for (const uf of ufs) {
-    const muns = await carregarSecoes(el, uf, { signal })
+    if (signal?.aborted) break
+    const muns = await carregarSecoes(el, uf)
     for (const m of muns) {
       if (municipio && m.cd !== municipio) continue
       for (const z of m.zonas) {
         if (zona && z.cd !== zona) continue
-        for (const s of z.secoes) lista.push({ uf, mun: m.cd, zona: z.cd, secao: s })
+        for (const s of z.secoes) {
+          lista.push({ uf, mun: m.cd, zona: z.cd, secao: s, agregadaA: z.principal[s] ?? null })
+        }
       }
     }
   }
@@ -24,6 +27,7 @@ export function novoTotal() {
     secoesProcessadas: 0,
     urnasContadas: 0, // BUs distintos (seções agregadas compartilham o mesmo BU)
     semBU: 0,
+    agregadas: 0, // seções sem BU próprio: os votos estão no BU da seção principal
     erros: 0,
     aptos: 0,
     comparecimento: 0,
@@ -68,6 +72,11 @@ export async function totalizar(el, secoes, { concorrencia = 8, signal, onProgre
     while (idx < secoes.length) {
       if (signal?.aborted) return
       const s = secoes[idx++]
+      if (s.agregadaA) {
+        total.agregadas++
+        total.secoesProcessadas++
+        continue
+      }
       try {
         const r = await baixarBU(el, s.uf, s.mun, s.zona, s.secao, { signal })
         if (!r.bytes) {

@@ -145,7 +145,7 @@ export default function Totalizacao({ eleicao, candidatos }) {
             {fase === 'listando'
               ? 'Carregando lista de seções…'
               : `${fmt(progresso.feito)} / ${fmt(progresso.total)} seções (${pct.toFixed(1)}%)`}
-            {total && ` · urnas contadas: ${fmt(total.urnasContadas)} · sem BU: ${fmt(total.semBU)} · erros: ${fmt(total.erros)}`}
+            {total && ` · urnas contadas: ${fmt(total.urnasContadas)} · agregadas: ${fmt(total.agregadas)} · sem BU: ${fmt(total.semBU)} · erros: ${fmt(total.erros)}`}
             {fase === 'fim' && !concluido && ' · interrompido'}
           </span>
         </div>
