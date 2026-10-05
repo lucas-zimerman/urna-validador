@@ -4,7 +4,9 @@ Site para conferir os resultados de **Presidente** usando os dados públicos do 
 Você compara o boletim de urna impresso (o papel afixado na seção) com o arquivo
 que o TSE publicou, e pode refazer a soma de todas as seções.
 
-## Como rodar
+**Use direto no navegador:** https://lucas-zimerman.github.io/urna-validador/
+
+## Como rodar no seu computador
 
 Precisa do [Node.js](https://nodejs.org) 22 ou mais novo.
 
@@ -73,5 +75,7 @@ O site confere a soma de cada boletim e soma todos eles.
 - O TSE limita o número de requisições; se aparecer "HTTP 429", espere um pouco
   e tente de novo.
 
-Projeto independente, sem vínculo com o TSE. Os dados vêm da API pública
+## Licença
+
+[MIT](LICENSE). Projeto independente, sem vínculo com o TSE. Os dados vêm da API pública
 [resultados.tse.jus.br](https://resultados.tse.jus.br).
