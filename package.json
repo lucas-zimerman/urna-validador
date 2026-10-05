@@ -1,0 +1,27 @@
+{
+  "name": "urna-validador",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "totalizar": "node scripts/totalizar.mjs",
+    "lint": "oxlint"
+  },
+  "dependencies": {
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.7",
+    "@vitejs/plugin-react": "^6.1.2",
+    "oxlint": "^1.87.0",
+    "vite": "^8.3.2"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
